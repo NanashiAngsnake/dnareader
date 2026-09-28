@@ -1,0 +1,4 @@
+onnxruntime
+rapidocr-onnxruntime
+genanki
+soundcard

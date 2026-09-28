@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>DNAreader</title>
+<link rel="icon" type="image/png" href="/static/icon.png">
+<style>
+  :root {
+    --ink-0:#0d1418; --ink-1:#131c22; --ink-2:#1b262e; --ink-3:#243440;
+    --line:rgba(145,225,226,.14); --line-soft:rgba(145,225,226,.07);
+    --bg:var(--ink-0); --panel:var(--ink-1); --panel2:var(--ink-2);
+    --text:#e9f1f2; --dim:#8ba3ab; --dim-2:#6b828a;
+    --accent:#5ecfd4; --accent-hi:#91e1e2; --accent-dim:rgba(94,207,212,.16);
+    --hl:rgba(94,207,212,.28); --word-a:#7fd18a; --word-b:#e0a95e;
+    --danger:#e06a6a; --r:9px; --r-sm:7px;
+    --t:.16s cubic-bezier(.4,0,.2,1);
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-size:13px;
+    font-family:'Segoe UI Variable Text','Segoe UI','Yu Gothic UI',Meiryo,sans-serif;
+    -webkit-font-smoothing:antialiased; }
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:var(--ink-3); border-radius:5px; }
+  ::-webkit-scrollbar-thumb:hover { background:#2e4250; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  header { display:flex; gap:8px; align-items:center; padding:10px 14px;
+    background:linear-gradient(180deg,var(--ink-1),var(--ink-0));
+    border-bottom:1px solid var(--line); flex-wrap:wrap;
+    position:sticky; top:0; z-index:50; }
+  header h1 { font-size:15px; margin:0 14px 0 0; color:var(--text); font-weight:600;
+    letter-spacing:.2px; }
+  select,button,input[type=number] { background:var(--ink-2); color:var(--text);
+    border:1px solid var(--line); border-radius:var(--r-sm); padding:0 11px;
+    height:32px; font-size:12.5px; font-family:inherit; font-weight:500;
+    transition:background-color var(--t), border-color var(--t); }
+  button { cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  button:hover, select:hover { background:var(--ink-3); border-color:rgba(145,225,226,.32); }
+  button:active { background:#2b3d4a; }
+  button:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  button.primary { background:var(--accent-dim); color:var(--accent-hi);
+    border-color:rgba(94,207,212,.4); font-weight:600; }
+  button.primary:hover { background:rgba(94,207,212,.26); border-color:var(--accent); }
+  label.chk { font-size:12.5px; color:var(--dim); display:flex; align-items:center;
+    gap:6px; background:var(--ink-2); border:1px solid var(--line);
+    border-radius:var(--r-sm); height:32px; padding:0 11px; cursor:pointer; }
+  label.chk input { accent-color:var(--accent); width:15px; height:15px; cursor:pointer; }
+  #status { font-size:12px; color:var(--dim); margin-left:auto; }
+  #main { padding:16px; display:flex; flex-direction:column; gap:16px; }
+  #imgwrap { position:relative; display:none; max-width:100%; width:fit-content;
+    border:1px solid var(--line); border-radius:var(--r); overflow:hidden;
+    box-shadow:0 8px 28px rgba(0,0,0,.45); }
+  #shot { display:block; max-width:100%; height:auto; user-select:none; }
+  #overlay { position:absolute; inset:0; }
+  .cbox { position:absolute; cursor:crosshair; }
+  .cbox.hl { background:rgba(94,207,212,.55); outline:2px solid var(--accent-hi);
+    border-radius:2px; box-shadow:0 0 8px rgba(94,207,212,.8); }
+  .cbox.wa { border-bottom:3px solid var(--word-a); }
+  .cbox.wb { border-bottom:3px solid var(--word-b); }
+  #textpanel { background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--r); padding:14px 18px; display:none; }
+  #textpanel h2 { font-size:11px; color:var(--dim-2); margin:0 0 10px; font-weight:600;
+    text-transform:uppercase; letter-spacing:.7px; }
+  .tline { font-size:22px; line-height:1.85;
+    font-family:'Yu Gothic','Yu Gothic UI',Meiryo,sans-serif; }
+  .tline span { cursor:crosshair; border-bottom:2.5px solid transparent;
+    border-radius:3px 3px 0 0; }
+  .tline span.wa { border-bottom-color:var(--word-a); }
+  .tline span.wb { border-bottom-color:var(--word-b); }
+  .tline span.hl { background:var(--accent); color:#08181a; font-weight:600;
+    border-radius:3px; box-shadow:0 0 0 2px var(--accent); }
+  .tline.dim { color:var(--dim-2); font-size:15px; }
+  #hint { color:var(--dim); font-size:13px; padding:36px; text-align:center;
+    border:1px dashed var(--line); border-radius:var(--r); line-height:1.7;
+    background:rgba(94,207,212,.03); }
+  kbd { background:var(--ink-2); border:1px solid var(--line); border-bottom-width:2px;
+    border-radius:4px; padding:2px 7px; font-size:11px; font-family:inherit;
+    color:var(--text); }
+  #settings { display:none; padding:12px 16px; font-size:12.5px; gap:10px 26px;
+    background:var(--ink-0); border-bottom:1px solid var(--line-soft);
+    flex-wrap:wrap; align-items:center; position:sticky; top:0; z-index:49; }
+  #settings.show { display:flex; }
+  #settings .grp { display:flex; align-items:center; gap:9px; }
+  #settings .lbl { color:var(--dim-2); font-size:11px; text-transform:uppercase;
+    letter-spacing:.6px; font-weight:600; }
+  #settings .val { color:var(--accent-hi); font-variant-numeric:tabular-nums;
+    min-width:56px; font-weight:600; }
+  button.ico { padding:0; width:34px; justify-content:center; }
+  button.on { background:var(--accent); border-color:var(--accent); color:#08181a; font-weight:600; }
+  button.on svg.i { color:#08181a; }
+  .tline { font-size:var(--fs,22px); }
+  svg.i { width:15px; height:15px; flex:0 0 auto; stroke:currentColor; fill:none;
+    stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; color:var(--dim); }
+  button:hover svg.i { color:var(--accent); }
+  button.primary svg.i { color:var(--accent); }
+
+  #popup { position:fixed; z-index:100; width:420px; max-height:60vh; overflow-y:auto;
+    background:linear-gradient(180deg,var(--ink-2),var(--ink-1));
+    border:1px solid var(--line); border-radius:var(--r);
+    box-shadow:0 10px 34px rgba(0,0,0,.55); display:none; padding:2px 0;
+    animation:pop .13s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes pop { from { opacity:0; transform:translateY(5px) scale(.98); } }
+  .entry { padding:11px 14px; border-bottom:1px solid var(--line-soft); }
+  .entry:last-child { border-bottom:none; }
+  .head { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .head ruby { font-size:26px; font-family:'Yu Gothic','Yu Gothic UI',Meiryo,sans-serif; }
+  .head rt { font-size:11.5px; color:var(--accent); font-weight:600; }
+  .head .reading-only { font-size:15px; color:var(--dim); }
+  .tagrow { margin:6px 0 7px; display:flex; gap:5px; flex-wrap:wrap; }
+  .tag { font-size:10px; background:var(--ink-3); color:var(--dim); padding:2px 7px;
+    border-radius:4px; font-weight:500; }
+  .tag.pos { background:rgba(94,207,212,.15); color:var(--accent-hi); }
+  ol.gl { margin:3px 0 0; padding-left:20px; font-size:13px; }
+  ol.gl li { margin:3px 0; color:var(--text); line-height:1.45; }
+  ol.gl li::marker { color:var(--dim-2); font-size:11px; }
+  .langbadge { display:inline-block; font-size:9px; font-weight:800; border-radius:3px;
+    padding:2px 6px; margin:6px 0 2px; letter-spacing:.5px; }
+  .langbadge.fr { background:rgba(94,207,212,.18); color:var(--accent-hi); }
+  .langbadge.en { background:rgba(224,180,94,.16); color:#e0b45e; }
+  .savew { margin-left:auto; width:28px; height:28px; padding:0; flex:0 0 auto;
+    justify-content:center; font-size:16px; line-height:1; background:var(--ink-3);
+    border:1px solid var(--line); border-radius:6px; color:var(--accent-hi); cursor:pointer; }
+  .savew:hover { background:var(--accent); color:#08181a; border-color:var(--accent); }
+  .savew.saved { background:#5ec98a; color:#08181a; border-color:#5ec98a; }
+  .nores { padding:14px; color:var(--dim); font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <img src="/static/icon.png" alt="" style="width:26px;height:26px;border-radius:6px;margin-right:8px">
+  <h1>漢字 Game Reader</h1>
+  <select id="winsel"><option value="">écran entier</option></select>
+  <button id="refreshwins" title="Rafraîchir la liste des fenêtres">
+    <svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button>
+  <button id="capture" class="primary">
+    <svg class="i" viewBox="0 0 24 24"><path d="M2 12h4l2-5 3 11 3-8 2 2h6"/></svg>Capturer</button>
+  <button id="rebind" title="Cliquer puis appuyer sur une touche pour changer le raccourci global">
+    <svg class="i" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
+    <span id="hklabel">F8</span></button>
+  <label class="chk" title="Vérifie l'écran régulièrement et lit dès qu'un nouveau texte s'affiche"><input type="checkbox" id="auto"> auto : vérifier toutes les</label>
+  <input type="number" id="autosec" value="1" min="0.3" max="30" step="0.1" style="width:62px" title="Intervalle entre deux vérifications de l'écran (en secondes). La lecture complète ne se déclenche que si le texte a changé puis s'est stabilisé.">
+  <span class="chk">secondes</span>
+  <label class="chk"><input type="checkbox" id="showboxes" checked> mots soulignés</label>
+  <button id="gear" title="Contraste, taille du texte, moteur">
+    <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg>Réglages</button>
+  <button id="modebtn" style="display:none" title="Revenir à la bulle, posée sur le jeu">
+    <svg class="i" viewBox="0 0 24 24"><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M3 4h18"/></svg>Bulle</button>
+  <span id="status">Prêt. Colle aussi une image avec Ctrl+V</span>
+</header>
+
+<div id="visitefenetre" hidden style="margin:10px 12px 0;padding:12px 14px;
+     border:1px solid #3a4d8f;border-radius:10px;background:#1a2033;
+     display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+  <div style="flex:1;min-width:280px;font-size:13px;line-height:1.55">
+    <b style="font-size:14px">Voilà le mode fenêtre.</b> Il ne lit que quand tu
+    le demandes, donc il laisse le jeu tranquille.<br>
+    • <b>Capturer</b> (ou <b><span id="visitehk">F8</span></b> sans quitter le jeu) prend une image de la fenêtre choisie.<br>
+    • Tout le texte trouvé se liste sous l'image, pas une ligne à la fois.<br>
+    • Survole un mot, sur l'image ou dans la liste : la définition s'affiche, et <b>+</b> l'ajoute à ton vocabulaire.<br>
+    • <b>Ctrl+V</b> lit une capture collée, même si elle ne vient pas d'un jeu.<br>
+    • <b>auto</b> recapture toute seule toutes les N secondes.<br>
+    <span style="opacity:.75">Essaie maintenant : la visite t'attend.</span>
+  </div>
+  <button id="visiteretour" class="primary" style="align-self:center">
+    Revenir à la bulle et continuer</button>
+</div>
+
+<div id="settings">
+    <span class="grp"><span class="lbl">Zone lue</span>
+      <button id="pickzone" title="Trace un rectangle sur le jeu autour du texte a lire">
+        <svg class="i" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/></svg>Definir la zone</button>
+      <span class="val" id="zonelbl">tout l'ecran</span></span>
+  <span class="grp"><span class="lbl">Texte</span>
+    <button id="fsdown" class="ico" title="Réduire le texte reconnu">A−</button>
+    <button id="fsup" class="ico" title="Agrandir le texte reconnu">A+</button>
+    <span class="val" id="fslabel"></span></span>
+  <span class="grp"><span class="lbl">Texte difficile</span>
+    <button id="boost" title="Contraste et netteté renforcés, utile sur les écrans voilés ou peu contrastés">
+      <svg class="i" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3.2"/></svg>Contraste max</button></span>
+  <span class="grp"><span class="lbl">Moteur</span>
+    <button id="enginebtn" title="Reconnaissance par IA (manga-ocr) : bien meilleure sur le japonais stylisé ou peu contrasté, un peu plus lente, et moins bonne sur les chiffres">
+      <svg class="i" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v1a3 3 0 0 0-3 3v1a3 3 0 0 0 0 6 3 3 0 0 0 3 3 3 3 0 0 0 6 0 3 3 0 0 0 3-3 3 3 0 0 0 0-6v-1a3 3 0 0 0-3-3V6a3 3 0 0 0-3-3Z"/></svg>
+      <span id="enginelbl">Haute précision</span></button></span>
+</div>
+
+<div id="main">
+  <div id="hint">
+    Choisis la fenêtre du jeu puis <b>Capturer</b> (ou le raccourci global, <kbd>F8</kbd> par défaut), ou colle une
+    capture d'écran avec <kbd>Ctrl+V</kbd>.<br><br>
+    Survole ensuite le texte japonais : les mots détectés sont soulignés
+    (couleurs alternées = frontières de mots) et le dictionnaire s'affiche comme Yomitan.<br>
+    <small>Jeu en plein écran exclusif ? Passe-le en « fenêtré sans bordure ».</small>
+  </div>
+  <div id="imgwrap">
+    <img id="shot">
+    <div id="overlay"></div>
+  </div>
+  <div id="textpanel">
+    <h2>Texte reconnu</h2>
+    <div id="tlines"></div>
+  </div>
+</div>
+
+<div id="popup"></div>
+
+<script>
+window.__errors = [];
+window.addEventListener('error', e => {
+  const msg = e.message + (e.lineno ? ' (ligne ' + e.lineno + ')' : '');
+  window.__errors.push(msg);
+  const el = document.getElementById('status');
+  if (el) { el.textContent = '⚠ Erreur : ' + msg; el.style.color = '#ff7b72'; }
+});
+</script>
+
+<script>
+const $ = id => document.getElementById(id);
+let LINES = [];
+let IMGW = 0, IMGH = 0;
+let lookupTimer = null, lookupSeq = 0;
+let pinned = false;
+
+async function api(path, body) {
+  const r = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body||{})});
+  return r.json();
+}
+
+async function refreshWindows() {
+  const r = await fetch('/api/windows').then(r=>r.json());
+  const sel = $('winsel'); const cur = sel.value;
+  sel.innerHTML = '<option value="">écran entier</option>';
+  for (const w of r.windows) {
+    const o = document.createElement('option');
+    o.value = w; o.textContent = w.length > 60 ? w.slice(0,60)+'…' : w;
+    sel.appendChild(o);
+  }
+  sel.value = cur;
+}
+
+function setStatus(s) { $('status').textContent = s; }
+
+let capturing = false;
+async function doCapture(imageData, isAuto) {
+  if (capturing) return;
+  capturing = true;
+  try {
+    if (!isAuto) setStatus('Capture + OCR…');
+    const body = imageData
+      ? {image: imageData, auto: false}
+      : ($('winsel').value ? {window: $('winsel').value, auto: !!isAuto}
+                           : {screen: true, auto: !!isAuto});
+    body.engine = ENGINE;
+    body.enhance = ENHANCE;
+    if (ZONE) body.region = ZONE;
+    let r;
+    try { r = await api('/api/ocr', body); }
+    catch(e) { setStatus('Erreur : ' + e); return; }
+    if (r.error) { setStatus('Erreur : ' + r.error); return; }
+    if (r.nochange) {
+      if (!isAuto) setStatus('Image inchangée');
+      return;
+    }
+    LINES = r.lines; IMGW = r.width; IMGH = r.height;
+    $('shot').src = r.image;
+    $('hint').style.display = 'none';
+    $('imgwrap').style.display = 'block';
+    $('shot').onload = renderOverlay;
+    renderTextPanel();
+    const nJp = LINES.filter(l=>l.jp).length;
+    setStatus(`${LINES.length} lignes détectées (${nJp} en japonais)` + (isAuto ? ' · auto' : ''));
+  } finally {
+    capturing = false;
+  }
+}
+
+function wordClassFor(line, idx) {
+  let k = 0;
+  for (const w of (line.words||[])) {
+    if (idx >= w.s && idx < w.e) return (k % 2 === 0) ? 'wa' : 'wb';
+    k++;
+  }
+  return '';
+}
+function wordClass(line, idx) {
+  const ws = line.words||[];
+  for (let k = 0; k < ws.length; k++) {
+    if (idx >= ws[k].s && idx < ws[k].e) return (k % 2 === 0) ? 'wa' : 'wb';
+  }
+  return '';
+}
+
+function renderOverlay() {
+  const ov = $('overlay'); ov.innerHTML = '';
+  const img = $('shot');
+  const sx = img.clientWidth / IMGW, sy = img.clientHeight / IMGH;
+  const showW = $('showboxes').checked;
+  LINES.forEach((line, li) => {
+    if (!line.jp) return;
+    line.chars.forEach((b, ci) => {
+      const d = document.createElement('div');
+      d.className = 'cbox';
+      const wc = showW ? wordClass(line, ci) : '';
+      if (wc) d.classList.add(wc);
+      d.style.left = (b[0]*sx)+'px'; d.style.top = (b[1]*sy)+'px';
+      d.style.width = Math.max(b[2]*sx,6)+'px'; d.style.height = Math.max(b[3]*sy,8)+'px';
+      d.dataset.line = li; d.dataset.idx = ci;
+      d.addEventListener('mouseenter', onHover);
+      ov.appendChild(d);
+    });
+  });
+  ov.addEventListener('mouseleave', scheduleHide);
+}
+
+function renderTextPanel() {
+  const tp = $('tlines'); tp.innerHTML = '';
+  const showW = $('showboxes').checked;
+  LINES.forEach((line, li) => {
+    const div = document.createElement('div');
+    div.className = 'tline' + (line.jp ? '' : ' dim');
+    [...line.text].forEach((ch, ci) => {
+      const s = document.createElement('span');
+      s.textContent = ch;
+      if (line.jp && showW) {
+        const wc = wordClass(line, ci);
+        if (wc) s.classList.add(wc);
+      }
+      s.dataset.line = li; s.dataset.idx = ci;
+      if (line.jp) s.addEventListener('mouseenter', onHover);
+      div.appendChild(s);
+    });
+    tp.appendChild(div);
+  });
+  $('textpanel').style.display = LINES.length ? 'block' : 'none';
+}
+
+function onHover(ev) {
+  const li = +ev.target.dataset.line, ci = +ev.target.dataset.idx;
+  clearTimeout(lookupTimer);
+  lookupTimer = setTimeout(() => doLookup(li, ci, ev.clientX, ev.clientY), 80);
+}
+
+async function doLookup(li, ci, mx, my) {
+  const line = LINES[li];
+  const seq = ++lookupSeq;
+  const r = await api('/api/lookup', {text: line.text, offset: ci});
+  if (seq !== lookupSeq) return;
+  highlight(li, ci, r.matchLen);
+  showPopup(r, mx, my);
+}
+
+function highlight(li, ci, len) {
+  document.querySelectorAll('.hl').forEach(e => e.classList.remove('hl'));
+  if (!len) return;
+  document.querySelectorAll(`[data-line="${li}"]`).forEach(e => {
+    const i = +e.dataset.idx;
+    if (i >= ci && i < ci + len) e.classList.add('hl');
+  });
+}
+
+function showPopup(r, mx, my) {
+  const p = $('popup');
+  if (!r.matches.length) { hidePopup(); return; }
+  p.innerHTML = r.matches.slice(0, 12).map(m => {
+    const head = m.reading && m.reading !== m.expression
+      ? `<ruby>${esc(m.expression)}<rt>${esc(m.reading)}</rt></ruby>`
+      : `<ruby>${esc(m.expression)}</ruby>`;
+    const tags = m.tags.map(t => `<span class="tag ${posTag(t)?'pos':''}" title="${esc(tagNote(t))}">${esc(t)}</span>`).join('');
+    const defs = m.defs.map(d => {
+      const badge = `<span class="langbadge ${d.lang}">${d.lang.toUpperCase()}</span>`;
+      const lis = d.glosses.slice(0, 8).map(g => `<li>${esc(g)}</li>`).join('');
+      return `<div>${badge}</div><ol class="gl">${lis}</ol>`;
+    }).join('');
+    return `<div class="entry"><div class="head">${head}</div>
+      <div class="tagrow">${tags}</div>${defs}</div>`;
+  }).join('');
+  p.style.display = 'block';
+  const pw = 420, ph = Math.min(p.scrollHeight, window.innerHeight*0.6);
+  let x = mx + 18, y = my + 18;
+  if (x + pw > window.innerWidth - 8) x = mx - pw - 18;
+  if (y + ph > window.innerHeight - 8) y = Math.max(8, my - ph - 18);
+  p.style.left = Math.max(8,x)+'px'; p.style.top = Math.max(8,y)+'px';
+}
+
+let hideTimer = null;
+function scheduleHide() { hideTimer = setTimeout(hidePopup, 350); }
+function hidePopup() {
+  if (pinned) return;
+  $('popup').style.display = 'none';
+  document.querySelectorAll('.hl').forEach(e => e.classList.remove('hl'));
+}
+$('popup').addEventListener('mouseenter', () => clearTimeout(hideTimer));
+$('popup').addEventListener('mouseleave', scheduleHide);
+document.addEventListener('mousemove', ev => {
+  const p = $('popup');
+  if (p.style.display === 'none') return;
+  const t = ev.target;
+  if (t.closest && (t.closest('#popup') || t.classList?.contains('cbox') ||
+      (t.dataset && t.dataset.line !== undefined))) { clearTimeout(hideTimer); return; }
+  scheduleHide();
+});
+
+let TAGS = {};
+fetch('/api/tags').then(r=>r.json()).then(t => TAGS = t);
+function tagNote(t) { return (TAGS[t] && TAGS[t].notes) || t; }
+function posTag(t) { return TAGS[t] && ['partOfSpeech','pos'].includes(TAGS[t].category); }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+$('capture').addEventListener('click', () => doCapture());
+$('refreshwins').addEventListener('click', refreshWindows);
+$('showboxes').addEventListener('change', () => { renderOverlay(); renderTextPanel(); });
+window.addEventListener('resize', renderOverlay);
+
+document.addEventListener('paste', ev => {
+  for (const item of ev.clipboardData.items) {
+    if (item.type.startsWith('image/')) {
+      const f = item.getAsFile();
+      const rd = new FileReader();
+      rd.onload = () => doCapture(rd.result);
+      rd.readAsDataURL(f);
+      ev.preventDefault();
+      return;
+    }
+  }
+});
+
+let autoGen = 0;
+const SETTLE_MS_V1 = 350;
+const MAX_WAIT_V1 = 1500;
+function setAuto() {
+  autoGen++;
+  const myGen = autoGen;
+  if (!$('auto').checked) return;
+  let lastSig = null, changedAt = 0, lastMoveAt = 0, pending = false;
+  const body = () => ($('winsel').value ? {window: $('winsel').value} : {screen: true});
+  const loop = async () => {
+    if (myGen !== autoGen) return;
+    try {
+      const r = await api('/api/probe', body());
+      if (myGen !== autoGen) return;
+      if (r && r.sig) {
+        const now = Date.now();
+        if (r.sig !== lastSig) {
+          lastSig = r.sig;
+          if (!pending) { pending = true; changedAt = now; }
+          lastMoveAt = now;
+        }
+        if (pending && (now - lastMoveAt >= SETTLE_MS_V1 || now - changedAt >= MAX_WAIT_V1)) {
+          pending = false;
+          await doCapture(null, true);
+        }
+      }
+    } catch (e) {}
+    if (myGen !== autoGen) return;
+    const sec = Math.max(0.3, +$('autosec').value || 3);
+    setTimeout(loop, sec * 1000);
+  };
+  loop();
+}
+$('auto').addEventListener('change', setAuto);
+$('autosec').addEventListener('change', setAuto);
+
+let ws = null;
+function connectWS() {
+  try {
+    ws = new WebSocket(`ws://${location.host}/ws`);
+    ws.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch { return; }
+      if (m.type === 'capture') doCapture();
+    };
+    ws.onclose = () => setTimeout(connectWS, 1500);
+    ws.onerror = () => { try { ws.close(); } catch {} };
+  } catch { setTimeout(connectWS, 1500); }
+}
+connectWS();
+
+let CURHK = 'f8';
+const fmtHK = hk => hk.split('+').map(p => p.length === 1 ? p.toUpperCase() : p[0].toUpperCase()+p.slice(1)).join('+');
+fetch('/api/hotkey').then(r=>r.json()).then(d => { CURHK = d.hotkey || 'f8'; $('hklabel').textContent = fmtHK(CURHK); });
+
+function keyName(ev) {
+  const k = ev.key;
+  if (k === ' ') return 'space';
+  if (/^F\d{1,2}$/.test(k)) return k.toLowerCase();
+  if (k.length === 1) return k.toLowerCase();
+  const map = {ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+    Enter:'enter', Tab:'tab', Backspace:'backspace', Delete:'delete', Insert:'insert',
+    Home:'home', End:'end', PageUp:'page up', PageDown:'page down'};
+  return map[k] || k.toLowerCase();
+}
+
+$('rebind').addEventListener('click', () => {
+  const prev = $('hklabel').textContent;
+  $('hklabel').textContent = '…';
+  setStatus('Appuie sur la nouvelle touche (Échap pour annuler)');
+  const cleanup = () => document.removeEventListener('keydown', onKey, true);
+  const onKey = async ev => {
+    ev.preventDefault(); ev.stopPropagation();
+    if (ev.key === 'Escape') { cleanup(); $('hklabel').textContent = prev; setStatus('Rebind annulé'); return; }
+    if (['Control','Shift','Alt','Meta'].includes(ev.key)) return;
+    const parts = [];
+    if (ev.ctrlKey) parts.push('ctrl');
+    if (ev.altKey) parts.push('alt');
+    if (ev.shiftKey) parts.push('shift');
+    parts.push(keyName(ev));
+    cleanup();
+    const r = await api('/api/hotkey', {hotkey: parts.join('+')});
+    if (r.error) { $('hklabel').textContent = prev; setStatus('Erreur : ' + r.error); return; }
+    CURHK = r.hotkey; $('hklabel').textContent = fmtHK(CURHK); setStatus('Raccourci global : ' + fmtHK(CURHK));
+  };
+  document.addEventListener('keydown', onKey, true);
+});
+
+let ZONE = null;
+try { ZONE = JSON.parse(localStorage.getItem('kgr_zone') || 'null'); } catch {}
+function zoneLabel() {
+  $('zonelbl').textContent = ZONE
+    ? `${Math.round(ZONE[2]*100)}% × ${Math.round(ZONE[3]*100)}%` : "tout l'écran";
+}
+$('pickzone').addEventListener('click', async () => {
+  const pv = window.pywebview && window.pywebview.api;
+  if (!pv) { setStatus("Sélection de zone : disponible dans l'app"); return; }
+  setStatus('Trace un rectangle autour du texte…');
+  const r = await pv.pick_region($('winsel').value || null);
+  if (r && r.region) {
+    ZONE = r.region; localStorage.setItem('kgr_zone', JSON.stringify(ZONE));
+    setStatus('Zone définie — seule cette partie sera lue');
+  } else setStatus('Sélection annulée');
+  zoneLabel();
+});
+zoneLabel();
+
+$('gear').addEventListener('click', () => {
+  const on = $('settings').classList.toggle('show');
+  $('gear').classList.toggle('on', on);
+});
+
+let FS = +(localStorage.getItem('kgr_fs_v1') || 22);
+function applyFS() {
+  FS = Math.max(12, Math.min(48, FS));
+  document.documentElement.style.setProperty('--fs', FS + 'px');
+  localStorage.setItem('kgr_fs_v1', FS);
+  $('fslabel').textContent = FS + ' px';
+}
+$('fsdown').addEventListener('click', () => { FS -= 2; applyFS(); });
+$('fsup').addEventListener('click', () => { FS += 2; applyFS(); });
+applyFS();
+
+let ENHANCE = localStorage.getItem('kgr_enhance_v1') || 'auto';
+function applyEnhance() {
+  localStorage.setItem('kgr_enhance_v1', ENHANCE);
+  $('boost').classList.toggle('on', ENHANCE === 'boost');
+}
+$('boost').addEventListener('click', () => {
+  ENHANCE = (ENHANCE === 'boost') ? 'auto' : 'boost';
+  applyEnhance();
+  setStatus(ENHANCE === 'boost' ? 'Contraste maximal actif' : 'Contraste automatique');
+});
+applyEnhance();
+
+let ENGINE = localStorage.getItem('kgr_engine') || 'windows';
+function applyEngine() {
+  localStorage.setItem('kgr_engine', ENGINE);
+  const on = ENGINE === 'precise';
+  $('enginebtn').classList.toggle('primary', on);
+  $('enginelbl').textContent = on ? 'Haute précision — actif' : 'Haute précision';
+}
+fetch('/api/engines').then(r => r.json()).then(d => {
+  if (!d.precise) {
+    $('enginebtn').disabled = true;
+    $('enginebtn').style.opacity = .45;
+    $('enginebtn').title = 'manga-ocr n\'est pas installé';
+    ENGINE = 'windows';
+  }
+  applyEngine();
+}).catch(() => applyEngine());
+
+$('enginebtn').addEventListener('click', async () => {
+  ENGINE = (ENGINE === 'precise') ? 'windows' : 'precise';
+  applyEngine();
+  if (ENGINE === 'precise') {
+    setStatus('Chargement du moteur IA (jusqu\'à 1 min la 1re fois)…');
+    const r = await api('/api/precise/warmup', {});
+    if (r && r.error) { setStatus('Erreur : ' + r.error); ENGINE = 'windows'; applyEngine(); return; }
+    setStatus('Moteur haute précision prêt — relance une capture');
+  } else {
+    setStatus('Moteur Windows (rapide)');
+  }
+});
+
+function armModeButton() {
+  const pv = window.pywebview && window.pywebview.api;
+  if (!pv) return;
+  const b = $('modebtn');
+  b.style.display = '';
+  b.addEventListener('click', () => {
+    setStatus('Retour à la bulle…');
+    pv.set_mode('overlay');
+  });
+}
+if (window.pywebview) armModeButton();
+window.addEventListener('pywebviewready', armModeButton);
+
+(function visiteGuidee() {
+  let n = null;
+  try { n = localStorage.getItem('dnareader_tuto_reprise'); } catch (e) { return; }
+  if (n === null) return;
+  const bloc = $('visitefenetre');
+  if (!bloc) return;
+  bloc.hidden = false;
+  fetch('/api/hotkey').then(r => r.json()).then(d => {
+    const k = (d.hotkeys || {}).capture;
+    if (k) $('visitehk').textContent = k.toUpperCase();
+  }).catch(() => {});
+  $('visiteretour').addEventListener('click', () => {
+    const pv = window.pywebview && window.pywebview.api;
+    if (pv && typeof pv.set_mode === 'function') {
+      setStatus('Retour à la bulle…');
+      pv.set_mode('overlay');
+    } else {
+      location.href = '/overlay';
+    }
+  });
+})();
+
+refreshWindows();
+
+(async function reprendre() {
+  try {
+    const r = await fetch('/api/reglage').then(r => r.json());
+    const jeu = (r.reglages || {}).jeu;
+    if (!jeu) return;
+    await refreshWindows();
+    const sel = $('winsel');
+    if (![...sel.options].some(o => o.value === jeu)) return;
+    sel.value = jeu;
+    setStatus('Jeu : ' + jeu + ' — lecture…');
+    doCapture(null, false);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

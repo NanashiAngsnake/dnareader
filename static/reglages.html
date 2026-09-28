@@ -1,0 +1,334 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>DNAreader Réglages</title>
+
+<style>
+  :root {
+    --bg:#12141a; --bg-2:#181b22; --bg-3:#20242d; --line:#2b3038;
+    --fg:#e9edf2; --dim-1:#aab3c0; --dim-2:#7b8695;
+    --accent:#5dd6e0; --accent-hi:#8ce8f0; --danger:#e0575f; --ok:#6fdc8c;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:13px/1.5
+    system-ui, "Segoe UI", sans-serif; }
+  header { display:flex; align-items:center; gap:10px; padding:13px 18px;
+    border-bottom:1px solid var(--line); background:var(--bg-2);
+    position:sticky; top:0; z-index:5; }
+  header img { width:26px; height:26px; }
+  header h1 { font-size:15px; margin:0; font-weight:700; letter-spacing:.2px; }
+  header .sous { font-size:11px; color:var(--dim-2); margin-left:auto; }
+  main { padding:16px 18px 30px; max-width:760px; }
+  section { border:1px solid var(--line); border-radius:10px; padding:13px 15px;
+    margin-bottom:13px; background:var(--bg-2); }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.7px;
+    color:var(--dim-2); margin:0 0 10px; font-weight:700; }
+  .ligne { display:flex; align-items:center; gap:10px; padding:6px 0;
+    border-bottom:1px solid rgba(255,255,255,.035); flex-wrap:wrap; }
+  .ligne:last-child { border-bottom:0; }
+  .nom { min-width:150px; font-weight:600; }
+  .aide { flex:1 1 100%; font-size:11.5px; color:var(--dim-2); margin:-2px 0 3px; }
+  button, select, input[type=text], input[type=password] {
+    background:var(--bg-3); color:var(--fg); border:1px solid var(--line);
+    border-radius:7px; height:30px; padding:0 11px; font:inherit; cursor:pointer; }
+  input[type=text], input[type=password] { cursor:text; min-width:190px; }
+  button:hover { border-color:var(--accent); }
+  button.on { background:var(--accent); color:#0d0f13; border-color:var(--accent);
+    font-weight:600; }
+  button.primaire { background:var(--accent); color:#0d0f13; font-weight:600; }
+  button.danger:hover { border-color:var(--danger); color:var(--danger); }
+  input[type=range] { width:170px; accent-color:var(--accent); }
+  select option { background:#1c2028; color:#e9edf2; }
+  #partageliste { width:100%; max-height:220px; overflow-y:auto; font-size:11.5px; }
+  #partageliste .prop { display:flex; gap:8px; align-items:baseline;
+    padding:4px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+  #partageliste .faux { color:var(--danger); text-decoration:line-through; }
+  #partageliste .juste { color:var(--ok); }
+  #partageliste .voix { color:var(--dim-2); margin-left:auto;
+    font-variant-numeric:tabular-nums; }
+  #partageliste button { height:22px; padding:0 8px; font-size:11px; }
+  .val { font-size:11.5px; color:var(--dim-2); min-width:52px;
+    font-variant-numeric:tabular-nums; }
+  kbd { background:var(--bg-3); border:1px solid var(--line); border-radius:4px;
+    padding:1px 6px; font-size:11px; font-family:inherit; }
+  #etat { position:sticky; bottom:0; padding:9px 18px; background:var(--bg-2);
+    border-top:1px solid var(--line); font-size:11.5px; color:var(--dim-1); }
+  .ok { color:var(--ok); } .ko { color:var(--danger); }
+</style>
+
+<header>
+  <img src="/static/icon.png" alt="">
+  <h1 data-t="reg.titre">Réglages</h1>
+  <span class="sous" id="jeu" data-t="reg.aucunjeu">aucun jeu sélectionné</span>
+</header>
+
+<main>
+  <section>
+    <h2 data-t="reg.sect.jeu">Jeu</h2>
+    <div class="ligne"><span class="nom" data-t="reg.fenetrelue">Fenêtre lue</span>
+      <select id="jeusel"><option value="" data-t="jeu.choisir">Jeu à lire</option></select>
+      <button id="relirejeux" data-t="reg.actualiser">Actualiser</button>
+      <span class="aide" data-t="reg.jeu.aide">Le jeu doit être lancé pour apparaître dans la liste.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.zone">Zone du texte</span>
+      <button id="zonebtn" data-t="reg.zone.def">Définir la zone</button>
+      <span class="val" id="zonelbl" data-t="reg.zone.tout">tout l'écran</span>
+      <span class="aide" data-t="reg.zone.aide">Facultatif. Limite la lecture à la bande de dialogue :
+        plus rapide, et le reste de l'interface n'est plus lu.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.lire">Lire maintenant</span>
+      <button id="lirebtn" data-t="reg.lire.btn">Lire l'écran</button>
+      <span class="aide" data-t="reg.lire.aide">Le raccourci fait la même chose sans quitter le jeu.</span></div>
+  </section>
+
+  <section>
+    <h2 data-t="reg.sect.mode">Mode d'affichage</h2>
+    <div class="ligne"><span class="nom" data-t="reg.affichage">Affichage</span>
+      <button id="modebulle" data-t="reg.mode.bulle">Bulle sur le jeu</button>
+      <button id="modefen" data-t="reg.mode.fen">Fenêtre à côté</button></div>
+    <div class="ligne"><span class="aide" style="margin:0" data-t="reg.mode.aide">
+      La bulle se pose sur le jeu et n'affiche qu'une phrase à la fois. La fenêtre
+      affiche tout à côté du jeu et demande beaucoup moins à la machine :
+      à choisir sur un PC peu puissant.</span></div>
+  </section>
+
+  <section>
+    <h2 data-t="reg.sect.lecture">Lecture</h2>
+    <div class="ligne"><span class="nom" data-t="reg.moteur">Moteur</span>
+      <button id="moteur">Rapide</button>
+      <span class="aide" data-t="reg.moteur.aide">La haute précision relit chaque ligne avec un modèle plus
+        fort. Active-la si tu vois des erreurs. Le texte s'affiche un peu moins
+        vite.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.contraste">Contraste</span>
+      <select id="contraste">
+        <option value="auto" data-t="reg.contraste.auto">Automatique</option>
+        <option value="none" data-t="reg.contraste.aucun">Aucun</option>
+        <option value="light" data-t="reg.contraste.clair">Texte clair sur fond sombre</option>
+        <option value="dark" data-t="reg.contraste.sombre">Texte sombre sur fond clair</option>
+      </select>
+      <span class="aide" data-t="reg.contraste.aide">À ne toucher que si la lecture rate sur un jeu au rendu
+        inhabituel.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.flux">Lecture continue</span>
+      <button id="flux">Activée</button>
+      <span class="aide" data-t="reg.flux.aide">Windows prévient l'app quand l'image du jeu change. Sur une
+        machine peu puissante, la désactiver soulage le jeu.</span></div>
+  </section>
+
+  <section>
+    <h2 data-t="reg.sect.affichage">Affichage</h2>
+
+    <div class="ligne"><span class="nom" data-t="reg.opacite">Transparence — au repos</span>
+      <input type="range" id="opacite" min="30" max="100">
+      <span class="val" id="opacitelbl"></span></div>
+    <div class="ligne"><span class="nom" data-t="reg.opacitelec">Transparence — en lecture</span>
+      <input type="range" id="opacitelec" min="40" max="100">
+      <span class="val" id="opaciteleclbl"></span></div>
+    <div class="ligne"><span class="nom" data-t="reg.taille">Taille du texte</span>
+      <input type="range" id="taille" min="14" max="46">
+      <span class="val" id="taillelbl"></span></div>
+    <div class="ligne"><span class="nom" data-t="reg.surlignage">Surligner dans le jeu</span>
+      <button id="surlignage">Activé</button>
+      <span class="aide" data-t="reg.surlignage.aide">Pose un halo sur le mot survolé, dans l'image du jeu.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.traduction">Traduction</span>
+      <select id="traduction">
+        <option value="lecture" data-t="reg.trad.aucune">Lecture seule (aucune traduction)</option>
+        <option value="fr" data-t="reg.trad.fr">Traduire en français</option>
+      </select>
+      <span class="aide" data-t="reg.trad.aide">La traduction locale télécharge 2,5 Go au premier usage.</span></div>
+  </section>
+
+  <section>
+    <h2 data-t="reg.sect.auto">Jeux dont le texte défile tout seul</h2>
+    <div class="ligne"><span class="aide" style="margin:0 0 6px" data-t="reg.auto.aide">
+      Dans les cinématiques, la réplique part avant qu'on ait fini de lire.
+      Le gel met le jeu en pause le temps de la phrase.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.gelauto">Gel automatique</span>
+      <button id="gelauto">Désactivé</button>
+      <span class="aide" data-t="reg.gelauto.aide">Met le jeu en pause à chaque nouvelle phrase.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.touchegel">Touche de gel</span>
+      <button class="rebind" data-hk="freeze"><span data-t="reg.changer">Geler le jeu</span> <kbd id="k_freeze">F11</kbd></button>
+      <span class="aide" data-t="reg.touchegel.aide">Clique, puis appuie sur la touche voulue.</span></div>
+  </section>
+
+  <section>
+    <h2 data-t="reg.sect.raccourcis">Raccourcis</h2>
+    <div class="ligne">
+      <button class="rebind" data-hk="capture">Lire <kbd id="k_capture">F8</kbd></button>
+      <button class="rebind" data-hk="bulle">Bulle <kbd id="k_bulle">F7</kbd></button>
+      <button class="rebind" data-hk="toggle">Masquer <kbd id="k_toggle">F9</kbd></button>
+      <button class="rebind" data-hk="ghost">Clics au jeu <kbd id="k_ghost">0</kbd></button>
+      <button class="rebind" data-hk="zone">Zone <kbd id="k_zone">CTRL+SHIFT+A</kbd></button>
+      <button class="rebind" data-hk="quitter">Quitter <kbd id="k_quitter">CTRL+SHIFT+Q</kbd></button>
+    </div>
+    <div class="ligne"><span class="aide" id="hkhint">Clique un raccourci puis
+      appuie sur la touche voulue (Échap pour annuler).</span></div>
+  </section>
+
+  <section>
+    <h2 data-t="reg.sect.compte">Compte</h2>
+    <div class="ligne"><span class="aide" style="margin:0 0 2px" data-t="reg.compte.aide">Retrouver son travail sur un autre PC.</span></div>
+    <div class="ligne"><span class="aide" style="margin:0 0 6px" data-t="reg.sync.aide">
+      Sont synchronisés : le vocabulaire, les profils par jeu et les corrections.
+      Le fichier marche sans compte ni serveur. Le compte fait la même chose
+      automatiquement.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.fichier">Fichier</span>
+      <button id="exporter" data-t="reg.exporter">Exporter…</button>
+      <button id="importer" data-t="reg.importer">Importer…</button>
+      <span class="val" id="fichieretat"></span></div>
+    <div class="ligne"><span class="nom" data-t="reg.serveur">Serveur</span>
+      <input type="text" id="serveur" placeholder="https://sync.exemple.fr">
+      <span class="aide" data-t="reg.serveur.aide">Adresse d'un serveur de synchronisation. Le fichier
+        <code>serveur_sync.py</code> fourni s'héberge où tu veux. Ton mot de passe
+        n'y arrive jamais en clair.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.identifiant">Identifiant</span>
+      <input type="text" id="identifiant" autocomplete="username"></div>
+    <div class="ligne"><span class="nom" data-t="reg.motdepasse">Mot de passe</span>
+      <input type="password" id="motdepasse" autocomplete="current-password"></div>
+    <div class="ligne">
+      <button id="connexion" class="primaire" data-t="reg.connexion">Se connecter</button>
+      <button id="inscription" data-t="reg.inscription">Créer le compte</button>
+      <button id="synchroniser" data-t="reg.synchroniser">Synchroniser</button>
+      <button id="deconnexion" class="danger" data-t="reg.deconnexion">Se déconnecter</button>
+      <span class="val" id="compteetat"></span></div>
+  </section>
+
+  <section>
+    <h2 data-t="reg.sect.cle">Clé d'accès</h2>
+    <p class="aide" data-t="reg.cle.aide">La clé se vérifie en ligne au lancement,
+      puis fonctionne sans réseau pendant deux semaines. Elle vaut pour un nombre
+      limité de machines.</p>
+    <div class="ligne"><span class="nom" data-t="reg.cle.serveur">Serveur</span>
+      <input type="text" id="cleserveur" placeholder="https://dnareader.exemple.fr"></div>
+    <div class="ligne"><span class="nom" data-t="reg.cle">Clé</span>
+      <input type="text" id="cle" placeholder="DNAR-XXXXX-XXXXX-XXXXX-X"
+             spellcheck="false" autocomplete="off"></div>
+    <div class="ligne">
+      <button id="cleactiver" class="primaire" data-t="reg.cle.activer">Activer</button>
+      <button id="cleoublier" class="danger" data-t="reg.cle.oublier">Retirer de cette machine</button>
+      <span class="val" id="cleetat"></span></div>
+  </section>
+
+  <section>
+    <h2>Corrections partagées</h2>
+    <div class="ligne"><span class="aide" style="margin:0 0 6px">
+      Sur un même jeu, tout le monde bute sur les mêmes erreurs de lecture. Ce
+      que tu corriges peut donc servir aux autres, et l'inverse. Sont partagées
+      les paires « ce qui a été lu » et « ce qui est écrit », rattachées au jeu.
+      Jamais les dialogues eux-mêmes.</span></div>
+    <div class="ligne"><span class="nom">Participer</span>
+      <button id="partagebtn">Désactivé</button>
+      <span class="aide">Il faut un compte : sans identité, on ne peut pas
+        compter combien de personnes sont d'accord, et donc rien vérifier.</span></div>
+    <div class="ligne"><span class="nom">Serveur</span>
+      <input type="text" id="partageserveur" placeholder="https://sync.exemple.fr">
+      <span class="aide">Le même que pour la synchronisation, en général.</span></div>
+    <div class="ligne"><span class="nom">Ce jeu</span>
+      <button id="partagetirer">Récupérer les corrections</button>
+      <button id="partagevoir">Voir les propositions</button>
+      <span class="val" id="partageetat"></span></div>
+    <div class="ligne"><span class="aide" style="margin:0">
+      <b>Comment on évite les fausses corrections :</b> une proposition doit
+      d'abord ressembler à du japonais plus plausible que la lecture d'origine,
+      sinon elle n'est même pas envoyée. Ensuite elle n'est appliquée chez les
+      autres que si <b>plusieurs comptes différents</b> proposent exactement la
+      même. Renvoyer la sienne dix fois ne compte que pour une voix, et
+      n'importe qui peut contester une correction fautive.</span></div>
+    <div class="ligne"><div id="partageliste"></div></div>
+
+    <div class="ligne" id="contribligne" style="align-items:flex-start">
+      <span class="nom">Tes contributions</span>
+      <div style="flex:1">
+        <div id="contribchiffres" style="display:flex;gap:22px;flex-wrap:wrap;
+             align-items:baseline;margin-bottom:6px"></div>
+        <div id="contribtexte" class="aide" style="margin:6px 0 0"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="majsection" hidden>
+    <h2>Mise à jour</h2>
+    <div class="ligne"><span class="nom">Version installée</span>
+      <span class="val" id="majlocale">?</span></div>
+
+    <div id="majtrouvee" hidden>
+      <div class="ligne"><span class="nom">Nouvelle version</span>
+        <span class="val"><b id="majdistante"></b> <span id="majpoids" class="aide"></span></span></div>
+      <div class="ligne"><span class="aide" style="margin:0 0 6px" id="majnotes"></span></div>
+      <div class="ligne">
+        <button id="majinstaller" class="primaire">Installer</button>
+        <button id="majplustard">Plus tard</button>
+        <button id="majignorer">Ignorer cette version</button>
+      </div>
+
+      <div class="ligne" id="majprogres" hidden>
+        <progress id="majbarre" max="100" value="0" style="width:220px"></progress>
+        <span class="val" id="majrecus"></span>
+        <button id="majannuler" class="danger">Annuler</button>
+      </div>
+    </div>
+
+    <div class="ligne"><span class="nom">Chercher</span>
+      <button id="majauto">Automatiquement</button>
+      <button id="majmaintenant">Chercher maintenant</button>
+      <span class="val" id="majetat"></span></div>
+    <div class="ligne"><span class="aide" style="margin:0">
+      L'installateur téléchargé est <b>vérifié par son empreinte</b> avant d'être
+      lancé : un téléchargement tronqué est refusé plutôt qu'exécuté. La mise à
+      jour ne touche ni au vocabulaire, ni aux corrections, ni aux réglages, et
+      ne dépend pas de la clé d'accès : un essai terminé peut se mettre à
+      jour.</span></div>
+  </section>
+
+  <section>
+    <h2 data-t="reg.sect.aide">Aide</h2>
+    <div class="ligne"><span class="nom" data-t="reg.langue">Langue</span>
+      <select id="langue"></select>
+      <span class="aide" data-t="reg.langue.aide">S'applique à toute l'interface,
+        immédiatement.</span></div>
+    <div class="ligne"><span class="nom" data-t="reg.visite">Visite guidée</span>
+      <button id="visite" data-t="reg.visite.btn">Relancer la visite</button>
+      <span class="aide" data-t="reg.visite.aide">Les boutons, les deux types de jeu, le gel, la bulle.</span></div>
+
+    <div class="ligne"><span class="nom">Aider le lecteur</span>
+      <button id="recolte">Désactivée</button>
+      <span class="val" id="recoltecompte"></span>
+
+      <span class="aide">Pendant que tu joues, garde les lignes que les deux
+        moteurs lisent pareil, et les <b>envoie</b> pour entraîner le lecteur
+        que tout le monde reçoit à la mise à jour suivante.<br>
+        Ce qui part : la bande découpée autour de la ligne, le texte lu, le nom
+        du jeu. Jamais de capture d'écran.</span></div>
+
+    <div class="ligne" style="align-items:flex-start">
+      <span class="nom">Un problème ?</span>
+      <div style="flex:1">
+        <textarea id="bugtexte" rows="3" spellcheck="false"
+          placeholder="Qu'est-ce qui s'est passé ? Ce que tu faisais suffit."
+          style="width:100%;max-width:460px;padding:8px;border-radius:6px;
+                 border:1px solid var(--line);background:var(--bg-2);
+                 color:var(--fg);font:inherit;resize:vertical"></textarea>
+        <div class="ligne" style="margin:6px 0 0;padding:0">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="bugjournal" checked>
+            <span class="aide" style="margin:0">joindre le journal technique</span>
+          </label>
+          <button id="bugvoir" type="button">Voir ce qui sera envoyé</button>
+          <button id="bugenvoi" class="primaire">Envoyer</button>
+          <span class="val" id="bugetat"></span>
+        </div>
+        <pre id="bugapercu" hidden style="max-height:220px;overflow:auto;
+             margin:8px 0 0;padding:8px;border:1px solid var(--line);
+             border-radius:6px;background:var(--bg-2);font-size:11px;
+             white-space:pre-wrap;word-break:break-word"></pre>
+        <div class="ligne"><span class="aide" style="margin:6px 0 0">
+          Ni ta clé, ni ton mot de passe, ni ton vocabulaire ne sont envoyés.
+          Le journal contient les répliques lues dans ton jeu, décoche si tu
+          préfères, le reste part quand même.</span></div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<div id="etat" data-t="reg.pret">Prêt.</div>
+
+<script src="/static/js/05-langue.js"></script>
+<script src="/static/js/70-reglages.js"></script>
+<script src="/static/js/80-maj.js"></script>
